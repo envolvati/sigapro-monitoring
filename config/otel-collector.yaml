@@ -10,18 +10,25 @@ processors:
   batch:
 
 exporters:
+  # O coração dos Traces (A linha do tempo do Grafana via gRPC)
   otlp/tempo:
     endpoint: tempo:4317
     tls:
       insecure: true
-  loki:
-    endpoint: "http://loki:3100/loki/api/v1/push"
+      
+  # O coração dos Logs (Onde os textos puros e erros vão morar via HTTP nativo OTLP)
+  otlphttp/loki:
+    endpoint: "http://loki:3100/otlp"
+
+  # A ponte para o Prometheus puxar as métricas da sua aplicação
   prometheus:
     endpoint: "0.0.0.0:8889"
 
+  # Printa no terminal para ajudar no debug inicial pelo Coolify
   debug:
     verbosity: basic
 
+# Extensões de diagnóstico interno do Collector
 extensions:
   health_check:
   pprof:
@@ -30,6 +37,7 @@ extensions:
     endpoint: :55679
 
 service:
+  # Expõe as métricas internas de saúde do próprio OTel para o Prometheus
   telemetry:
     metrics:
       readers:
@@ -38,8 +46,10 @@ service:
               prometheus:
                 host: 0.0.0.0
                 port: 8888
+                
   extensions: [pprof, zpages, health_check]
   
+  # As "Rodovias" por onde os dados trafegam
   pipelines:
     traces:
       receivers: [otlp]
@@ -48,7 +58,7 @@ service:
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [loki, debug]
+      exporters: [otlphttp/loki, debug]
     metrics:
       receivers: [otlp]
       processors: [batch]
