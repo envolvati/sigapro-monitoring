@@ -1,0 +1,49 @@
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.95.0
+    command: ["--config=/etc/otel-collector.yaml"]
+    volumes:
+      - ./config/otel-collector.yaml:/etc/otel-collector.yaml
+    ports:
+      - "4317:4317" # Porta gRPC
+      - "4318:4318" # Porta HTTP (O Next.js usa muito essa)
+    networks:
+      - coolify
+
+  tempo:
+    image: grafana/tempo:2.4.0
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./config/tempo.yaml:/etc/tempo.yaml
+    networks:
+      - coolify
+
+  loki:
+    image: grafana/loki:2.9.4
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./config/loki.yaml:/etc/loki/local-config.yaml
+    networks:
+      - coolify
+
+  prometheus:
+    image: prom/prometheus:v2.50.1
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./config/prometheus.yaml:/etc/prometheus/prometheus.yml
+    networks:
+      - coolify
+
+  grafana:
+    image: grafana/grafana:10.3.3
+    volumes:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+    ports:
+      - "3000:3000" # O Coolify vai ler essa porta para colocar o HTTPS
+    networks:
+      - coolify
+
+networks:
+  coolify:
+    external: true
