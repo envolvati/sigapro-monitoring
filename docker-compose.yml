@@ -1,6 +1,7 @@
 services:
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.157.0
+    user: "0:0"
     command: ["--config=/etc/otel-collector.yaml"]
     volumes:
       - ./config/otel-collector.yaml:/etc/otel-collector.yaml
@@ -43,7 +44,7 @@ services:
     volumes:
       - ./grafana/provisioning/datasources/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
     ports:
-      - "3000:3000" # O Coolify vai ler essa porta para colocar o HTTPS
+      - "3001:3000" # O Coolify vai ler essa porta para colocar o HTTPS
     networks:
       - coolify
 

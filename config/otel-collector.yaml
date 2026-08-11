@@ -8,6 +8,7 @@ receivers:
   filelog/docker:
     include:
       - /var/lib/docker/containers/*/*.log
+    include_file_path: true
     start_at: end
     operators:
       - type: json_parser
@@ -24,7 +25,7 @@ receivers:
 
 processors:
   batch:
-  
+
   # Processador para garantir que todos os dados tenham as tags de ambiente
   resource/env:
     attributes:
@@ -38,7 +39,7 @@ exporters:
     endpoint: tempo:4317
     tls:
       insecure: true
-      
+
   # O coração dos Logs (Onde os textos puros e erros vão morar via HTTP nativo OTLP)
   otlphttp/loki:
     endpoint: "http://loki:3100/otlp"
@@ -69,9 +70,9 @@ service:
               prometheus:
                 host: 0.0.0.0
                 port: 8888
-                
+
   extensions: [pprof, zpages, health_check]
-  
+
   # As "Rodovias" por onde os dados trafegam
   pipelines:
     traces:
@@ -82,13 +83,13 @@ service:
       receivers: [otlp]
       processors: [batch]
       exporters: [otlphttp/loki, debug]
-    
+
     # Nova rodovia para sugar o terminal do Docker e jogar no Loki
     logs/docker:
       receivers: [filelog/docker]
       processors: [batch]
       exporters: [otlphttp/loki, debug]
-      
+
     metrics:
       receivers: [otlp]
       processors: [batch]
